@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Union
 
 from graphql import ResolveInfo
 
@@ -87,19 +87,22 @@ class AllowSuperuser:
 
 
 class DjangoModelPermission:
-    app_lab = ''
-    model_name = ''
-    perms_map = {
-        'add': [f'{app_lab}.add_{model_name}'],
-        'change': [f'{app_lab}.change_{model_name}'],
-        'delete': [f'{app_lab}.delete_{model_name}'],
+    app_label: str = ''
+    model_name: str = ''
+    perms_map: dict = {
+        'add': [f'{app_label}.add_{model_name}'],
+        'change': [f'{app_label}.change_{model_name}'],
+        'delete': [f'{app_label}.delete_{model_name}'],
     }
+
+    def resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
+        return all([user.has_perm(self.perms_map[i]) for i in permissions])
 
     def has_node_permission(self, info: ResolveInfo, id: str) -> bool:
         return True
 
     def has_mutation_permission(self, root: Any, info: ResolveInfo, input: dict) -> bool:
-        return info.context.user.has_perms(self.perms_map['add'])
+        return self.resolve_permission(info.context.user, ('add', 'change', 'delete'))
 
     def has_filter_permission(self, info: ResolveInfo) -> bool:
         return True
