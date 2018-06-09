@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Union, Dict, List
 
 from graphql import ResolveInfo
 
@@ -87,22 +87,25 @@ class AllowSuperuser:
 
 
 class DjangoModelPermission:
-    app_label: str = ''
-    model_name: str = ''
-    perms_map: dict = {
-        'add': [f'{app_label}.add_{model_name}'],
-        'change': [f'{app_label}.change_{model_name}'],
-        'delete': [f'{app_label}.delete_{model_name}'],
-    }
+    """
+    Map django model permissions to mutation actions.
+    """
 
-    def resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
+    def __init__(self, app_label, model_name):
+        self.perms_map: Dict[str: List[str]] = {
+            'add': [f'{app_label}.add_{model_name}'],
+            'change': [f'{app_label}.change_{model_name}'],
+            'delete': [f'{app_label}.delete_{model_name}'],
+        }
+
+    def _resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
         return all([user.has_perms(self.perms_map[i]) for i in permissions])
 
     def has_node_permission(self, info: ResolveInfo, id: str) -> bool:
         return True
 
     def has_mutation_permission(self, root: Any, info: ResolveInfo, input: dict) -> bool:
-        return self.resolve_permission(info.context.user, ('add', 'change', 'delete'))
+        return self._resolve_permission(info.context.user, ('add', 'change', 'delete'))
 
     def has_filter_permission(self, info: ResolveInfo) -> bool:
         return True
