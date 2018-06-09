@@ -96,7 +96,7 @@ class DjangoModelPermission:
     }
 
     def resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
-        return all([user.has_perm(self.perms_map[i]) for i in permissions])
+        return all([user.has_perms(self.perms_map[i]) for i in permissions])
 
     def has_node_permission(self, info: ResolveInfo, id: str) -> bool:
         return True
