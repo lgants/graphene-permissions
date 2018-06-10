@@ -90,13 +90,14 @@ class DjangoModelPermission:
     """
     Map django model permissions to mutation actions.
     """
+    app_label: str = ''
+    model_name: str = ''
 
-    def __init__(self, app_label, model_name):
-        self.perms_map: Dict[str: List[str]] = {
-            'add': [f'{app_label}.add_{model_name}'],
-            'change': [f'{app_label}.change_{model_name}'],
-            'delete': [f'{app_label}.delete_{model_name}'],
-        }
+    perms_map: Dict[str, List['str']] = {
+        'add': [f'{app_label}.add_{model_name}'],
+        'change': [f'{app_label}.change_{model_name}'],
+        'delete': [f'{app_label}.delete_{model_name}'],
+    }
 
     def _resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
         return all([user.has_perms(self.perms_map[i]) for i in permissions])
