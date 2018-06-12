@@ -1,3 +1,30 @@
+- model: contenttypes.contenttype
+  pk: 7
+  fields:
+    app_label: test_app
+    model: pet
+
+- model: auth.permission
+  pk: 19
+  fields:
+    name: Can add pet
+    content_type: 7
+    codename: add_pet
+
+- model: auth.permission
+  pk: 20
+  fields:
+    name: Can change pet
+    content_type: 7
+    codename: change_pet
+
+- model: auth.permission
+  pk: 21
+  fields:
+    name: Can delete pet
+    content_type: 7
+    codename: delete_pet
+
 - model: auth.user
   pk: 1
   fields:
@@ -7,6 +34,7 @@
     last_name: Smiths
     is_staff: true
     is_superuser: true
+    user_permissions: []
 
 - model: auth.user
   pk: 2
@@ -15,6 +43,7 @@
     password: pbkdf2_sha256$100000$AKKnjXeTLZ7V$o6UAPZXAiqfW9hOnzXRs4+FxfeVR/qm8kQb/iIrGmEI=
     first_name: Kate
     last_name: Katy
+    user_permissions: [20]  # can only update
 
 - model: auth.user
   pk: 3
@@ -23,6 +52,7 @@
     password: pbkdf2_sha256$100000$AKKnjXeTLZ7V$o6UAPZXAiqfW9hOnzXRs4+FxfeVR/qm8kQb/iIrGmEI=
     first_name: Paul
     last_name: Paulin
+    user_permissions: [19, 20, 21]  # can add/update/delete
 
 - model: test_app.pet
   pk: 1

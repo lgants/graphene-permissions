@@ -88,25 +88,27 @@ class AllowSuperuser:
 
 class DjangoModelPermission:
     """
-    Map django model permissions to mutation actions.
+    Map django model permissions to mutations.
     """
-    app_label: str = ''
-    model_name: str = ''
-
-    perms_map: Dict[str, List['str']] = {
-        'add': [f'{app_label}.add_{model_name}'],
-        'change': [f'{app_label}.change_{model_name}'],
-        'delete': [f'{app_label}.delete_{model_name}'],
-    }
-
-    def _resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
-        return all([user.has_perms(self.perms_map[i]) for i in permissions])
+    def _get_model(self):
+        return self.model
+    # app_label: str = ''
+    # model_name: str = ''
+    # perms_map: Dict[str, List['str']] = {
+    #     'add': [f'{app_label}.add_{model_name}'],
+    #     'change': [f'{app_label}.change_{model_name}'],
+    #     'delete': [f'{app_label}.delete_{model_name}'],
+    # }
+    #
+    # def _resolve_permission(self, user: 'get_user_model', permissions: Union[list, tuple]) -> bool:
+    #
+    #     return all([user.has_perms(self.perms_map[i]) for i in permissions])
 
     def has_node_permission(self, info: ResolveInfo, id: str) -> bool:
         return True
 
     def has_mutation_permission(self, root: Any, info: ResolveInfo, input: dict) -> bool:
-        return self._resolve_permission(info.context.user, ('add', 'change', 'delete'))
+        return info.context.user.has_perms(['test_app.add_pet'])
 
     def has_filter_permission(self, info: ResolveInfo) -> bool:
         return True

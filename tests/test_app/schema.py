@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 import graphene
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from graphene import ObjectType, Schema, relay
 from graphene.relay import ClientIDMutation
 from graphene_django import DjangoObjectType
@@ -13,8 +13,39 @@ from graphene_permissions.permissions import (
     AllowAuthenticated,
     AllowStaff,
     AllowSuperuser,
+    DjangoModelPermission,
 )
 from tests.test_app.models import Pet
+
+
+class PetModelPermission(DjangoModelPermission):
+    model = 'Zeno'
+    pass
+    # app_label = 'test_app'
+    # model_name = 'pet'
+
+    def has_mutation_permission(self, root, info, input):
+        print (self._get_model())
+        return super().has_mutation_permission(root, info, input)
+
+    #     print ([self.perms_map[i] for i in ['add']])
+    #     print ([info.context.user.has_perms(self.perms_map[i]) for i in ['add']])
+    #     # print ('MUTI', self._resolve_permission(info.context.user, ['add']))
+    #     # # pr
+    #     # print (info.context.user.user_permissions.all())
+    #     # print (Permission.objects.get(pk=19))
+    #     # print ('has', self._resolve_permission(info.context.user, ('add', 'change', 'delete')))
+    #
+    #     return self._resolve_permission(info.context.user, ['add'])
+
+
+class DjangoPermissionRequiredNode(AuthNode, DjangoObjectType):
+    permission_classes = (PetModelPermission,)
+
+    class Meta:
+        model = Pet
+        filter_fields = ('name',)
+        interfaces = (relay.Node,)
 
 
 class SuperUserRequiredPetNode(AuthNode, DjangoObjectType):
@@ -53,6 +84,10 @@ class AllowAnyPetNode(AuthNode, DjangoObjectType):
         interfaces = (relay.Node,)
 
 
+class DjangoModelFilter(AuthFilter):
+    permission_classes = (PetModelPermission,)
+
+
 class SuperUserRequiredFilter(AuthFilter):
     permission_classes = (AllowSuperuser,)
 
@@ -66,6 +101,10 @@ class AllowAuthenticatedFilter(AuthFilter):
 
 
 class PetsQuery:
+
+    django_pet = relay.Node.Field(DjangoPermissionRequiredNode)
+    all_django_pets = DjangoModelFilter(DjangoPermissionRequiredNode)
+
     superuser_pet = relay.Node.Field(SuperUserRequiredPetNode)
     all_superuser_pets = SuperUserRequiredFilter(SuperUserRequiredPetNode)
 
@@ -77,6 +116,26 @@ class PetsQuery:
 
     pet = relay.Node.Field(AllowAnyPetNode)
     all_pets = AuthFilter(AllowAnyPetNode)
+
+
+class DjangoPermissionAddPet(AuthMutation, ClientIDMutation):
+    permission_classes = (PetModelPermission,)
+
+    class Input:
+        name = graphene.String()
+        race = graphene.String()
+        owner = graphene.ID()
+
+    pet = graphene.Field(AllowAnyPetNode)
+    status = graphene.Int()
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, **input):
+        if cls.has_permission(root, info, input):
+            owner = User.objects.get(pk=from_global_id(input['owner'])[1])
+            pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
+            return DjangoPermissionAddPet(pet=pet, status=HTTPStatus.CREATED)
+        return DjangoPermissionAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
 
 
 class SuperUserAddPet(AuthMutation, ClientIDMutation):
@@ -96,7 +155,7 @@ class SuperUserAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return SuperUserAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return SuperUserAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
+        return SuperUserAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
 
 
 class StaffAddPet(AuthMutation, ClientIDMutation):
@@ -116,7 +175,7 @@ class StaffAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return StaffAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return StaffAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
+        return StaffAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
 
 
 class AuthenticatedAddPet(AuthMutation, ClientIDMutation):
@@ -136,7 +195,7 @@ class AuthenticatedAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return AuthenticatedAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return AuthenticatedAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
+        return AuthenticatedAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
 
 
 class AddPet(AuthMutation, ClientIDMutation):
@@ -156,10 +215,11 @@ class AddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return AddPet(pet=pet, status=HTTPStatus.CREATED)
-        return AddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
+        return AddPet(pet=None, status=HTTPStatus.FORBIDDEN)
 
 
 class PetsMutation:
+    django_model_add_pet = DjangoPermissionAddPet.Field()
     superuser_add_pet = SuperUserAddPet.Field()
     staff_add_pet = StaffAddPet.Field()
     authenticated_add_pet = AuthenticatedAddPet.Field()
