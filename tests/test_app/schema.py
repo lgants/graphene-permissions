@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 import graphene
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User
 from graphene import ObjectType, Schema, relay
 from graphene.relay import ClientIDMutation
 from graphene_django import DjangoObjectType
@@ -19,24 +19,7 @@ from tests.test_app.models import Pet
 
 
 class PetModelPermission(DjangoModelPermission):
-    model = 'Zeno'
-    pass
-    # app_label = 'test_app'
-    # model_name = 'pet'
-
-    def has_mutation_permission(self, root, info, input):
-        print (self._get_model())
-        return super().has_mutation_permission(root, info, input)
-
-    #     print ([self.perms_map[i] for i in ['add']])
-    #     print ([info.context.user.has_perms(self.perms_map[i]) for i in ['add']])
-    #     # print ('MUTI', self._resolve_permission(info.context.user, ['add']))
-    #     # # pr
-    #     # print (info.context.user.user_permissions.all())
-    #     # print (Permission.objects.get(pk=19))
-    #     # print ('has', self._resolve_permission(info.context.user, ('add', 'change', 'delete')))
-    #
-    #     return self._resolve_permission(info.context.user, ['add'])
+    model = 'pet'
 
 
 class DjangoPermissionRequiredNode(AuthNode, DjangoObjectType):
