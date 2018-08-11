@@ -118,7 +118,7 @@ class DjangoPermissionAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return DjangoPermissionAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return DjangoPermissionAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
+        return DjangoPermissionAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
 
 
 class SuperUserAddPet(AuthMutation, ClientIDMutation):
@@ -138,7 +138,7 @@ class SuperUserAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return SuperUserAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return SuperUserAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
+        return SuperUserAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
 
 
 class StaffAddPet(AuthMutation, ClientIDMutation):
