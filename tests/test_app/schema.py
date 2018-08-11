@@ -158,7 +158,7 @@ class StaffAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return StaffAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return StaffAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
+        return StaffAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
 
 
 class AuthenticatedAddPet(AuthMutation, ClientIDMutation):
@@ -178,7 +178,7 @@ class AuthenticatedAddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return AuthenticatedAddPet(pet=pet, status=HTTPStatus.CREATED)
-        return AuthenticatedAddPet(pet=None, status=HTTPStatus.FORBIDDEN)
+        return AuthenticatedAddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
 
 
 class AddPet(AuthMutation, ClientIDMutation):
@@ -198,7 +198,7 @@ class AddPet(AuthMutation, ClientIDMutation):
             owner = User.objects.get(pk=from_global_id(input['owner'])[1])
             pet = Pet.objects.create(name=input['name'], race=input['race'], owner=owner)
             return AddPet(pet=pet, status=HTTPStatus.CREATED)
-        return AddPet(pet=None, status=HTTPStatus.FORBIDDEN)
+        return AddPet(pet=None, status=HTTPStatus.BAD_REQUEST)
 
 
 class PetsMutation:
